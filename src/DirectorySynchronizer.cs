@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Security.Cryptography;
 
+// Class responsible for synchronizing two directories.
+// It periodically checks for changes in the source directory and updates the replica directory accordingly.
 class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
 {
     private readonly string sourceDir = sourceDir;

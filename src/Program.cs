@@ -1,4 +1,6 @@
-﻿class Program
+﻿// Main program file for the Directory Synchronizer application.
+// Checks command-line arguments, validates paths, and starts the synchronization process.
+class Program
 {
     const string UsageMessage = "Usage: <source> <replica> <log> <interval>";
 
