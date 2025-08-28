@@ -99,14 +99,14 @@ class DirectorySynchronizer
         watcher.Deleted += OnChanged;
         watcher.Renamed += OnRenamed;
 
-         watcher.NotifyFilter = NotifyFilters.FileName |
-                                NotifyFilters.DirectoryName |
-                                NotifyFilters.LastWrite |
-                                NotifyFilters.Size;
+        watcher.NotifyFilter = NotifyFilters.FileName |
+                               NotifyFilters.DirectoryName |
+                               NotifyFilters.LastWrite |
+                               NotifyFilters.Size;
 
-         watcher.Filter = "*.*";
+        watcher.Filter = "*.*";
 
-         watcher.EnableRaisingEvents = true;
+        watcher.EnableRaisingEvents = true;
     }
 
     private void OnChanged(object source, FileSystemEventArgs e)
@@ -121,84 +121,84 @@ class DirectorySynchronizer
 }
 
 class Program
+{
+    const string UsageMessage = "Usage: <source> <replica> <log> <interval>";
+
+    static void Main(string[] args)
     {
-        const string UsageMessage = "Usage: <source> <replica> <log> <interval>";
 
-        static void Main(string[] args)
+        if (args.Length != 4)
         {
+            Console.WriteLine(UsageMessage);
+            return;
+        }
 
-            if (args.Length != 4)
-            {
-                Console.WriteLine(UsageMessage);
-                return;
-            }
+        if (!int.TryParse(args[3], out int interval) || interval <= 0)
+        {
+            Console.WriteLine(UsageMessage);
+            Console.WriteLine("Interval must be a positive integer.");
+            return;
+        }
 
-            if (!int.TryParse(args[3], out int interval) || interval <= 0)
-            {
-                Console.WriteLine(UsageMessage);
-                Console.WriteLine("Interval must be a positive integer.");
-                return;
-            }
+        // If any of the paths are inside each other, it could lead to unexpected behavior.
+        if (IsFileInsideDirectory(args[0], args[1]) || IsFileInsideDirectory(args[1], args[0])
+            || IsFileInsideDirectory(args[0], args[2]) || IsFileInsideDirectory(args[2], args[0])
+            || IsFileInsideDirectory(args[1], args[2]) || IsFileInsideDirectory(args[2], args[1]))
+        {
+            Console.WriteLine(UsageMessage);
+            Console.WriteLine("Source, replica Directories and log file must not be inside each other.");
+            return;
+        }
 
-            // If any of the paths are inside each other, it could lead to unexpected behavior.
-            if (IsFileInsideDirectory(args[0], args[1]) || IsFileInsideDirectory(args[1], args[0])
-                || IsFileInsideDirectory(args[0], args[2]) || IsFileInsideDirectory(args[2], args[0])
-                || IsFileInsideDirectory(args[1], args[2]) || IsFileInsideDirectory(args[2], args[1]))
-            {
-                Console.WriteLine(UsageMessage);
-                Console.WriteLine("Source, replica Directories and log file must not be inside each other.");
-                return;
-            }
-
-            if (!Directory.Exists(args[0]))
-            {
-                try
-                {
-                    Directory.CreateDirectory(args[0]);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(UsageMessage);
-                    Console.WriteLine($"Error creating source Directory: {ex.Message}");
-                    return;
-                }
-            }
-
-            if (!Directory.Exists(args[1]))
-            {
-                try
-                {
-                    Directory.CreateDirectory(args[1]);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(UsageMessage);
-                    Console.WriteLine($"Error creating replica Directory: {ex.Message}");
-                    return;
-                }
-            }
-
+        if (!Directory.Exists(args[0]))
+        {
             try
             {
-                using (var logger = new Logger(args[2]))
-                {
-                    var synchronizer = new DirectorySynchronizer(args[0], args[1], logger);
-                    synchronizer.Start(interval);
-                }
+                Directory.CreateDirectory(args[0]);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(UsageMessage);
-                Console.WriteLine($"Error initializing logger: {ex.Message}");
+                Console.WriteLine($"Error creating source Directory: {ex.Message}");
+                return;
             }
-
         }
 
-        private static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
+        if (!Directory.Exists(args[1]))
         {
-            string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-            string fullFilePath = Path.GetFullPath(filePath);
-
-            return fullFilePath.StartsWith(fullDirectoryPath, StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                Directory.CreateDirectory(args[1]);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(UsageMessage);
+                Console.WriteLine($"Error creating replica Directory: {ex.Message}");
+                return;
+            }
         }
+
+        try
+        {
+            using (var logger = new Logger(args[2]))
+            {
+                var synchronizer = new DirectorySynchronizer(args[0], args[1], logger);
+                synchronizer.Start(interval);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(UsageMessage);
+            Console.WriteLine($"Error initializing logger: {ex.Message}");
+        }
+
     }
+
+    private static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
+    {
+        string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        string fullFilePath = Path.GetFullPath(filePath);
+
+        return fullFilePath.StartsWith(fullDirectoryPath, StringComparison.OrdinalIgnoreCase);
+    }
+}
