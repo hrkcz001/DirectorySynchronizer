@@ -12,20 +12,17 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
     public void Start(int interval)
     {
         InitLogging();
-        while (true)
+        try
         {
-            try
+            while (true)
             {
-                while (true)
-                {
-                    SyncDirectories(sourceDir, replicaDir);
-                    System.Threading.Thread.Sleep(interval * 1000);
-                }
+                SyncDirectories(sourceDir, replicaDir);
+                Thread.Sleep(interval * 1000);
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error during synchronization: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error during synchronization: {ex.Message}");
         }
     }
 
@@ -67,6 +64,16 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
     // Files are considered equal if their MD5 hashes match.
     public static bool FilesEqual(string f1, string f2)
     {
+
+        // First check file size and last write time for a quick comparison
+        var fileInfo1 = new FileInfo(f1);
+        var fileInfo2 = new FileInfo(f2);
+        if (fileInfo1.Length != fileInfo2.Length || fileInfo1.LastWriteTime != fileInfo2.LastWriteTime)
+        {
+            return false;
+        }
+
+        // If sizes and last write times are the same, do a deeper comparison using MD5 hashes
         using var md5 = MD5.Create();
         using var stream1 = File.OpenRead(f1);
         using var stream2 = File.OpenRead(f2);
