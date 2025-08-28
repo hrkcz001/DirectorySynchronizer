@@ -1,6 +1,10 @@
 ﻿using System.Collections;
 using System.Security.Cryptography;
 
+// Directories could be synchronized in the same way,
+// but since synchronization is periodic and it is more reliable to fully check the directories,
+// we use FileSystemWatcher only for logging changes.
+// Additionally, this approach provides more accurate timestamps in the logs.
 class Logger : IDisposable
 {
     private readonly object lockObj = new object();
@@ -110,6 +114,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
         logger.Log($"File: {e.OldFullPath} renamed to {e.FullPath}");
     }
 
+    // Files are considered equal if their MD5 hashes match.
     private static bool FilesEqual(string f1, string f2)
     {
         using var md5 = MD5.Create();
@@ -124,9 +129,16 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
 
     private void SyncDirectories(string source, string replica)
     {
+        SyncCreationInDirectories(source, replica);
+        SyncRemovalInDirectories(source, replica);
+    }
+
+    private void SyncCreationInDirectories(string source, string replica)
+    {
         source = source.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         replica = replica.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
+        // Copy new and updated files from source to replica
         foreach (var file in Directory.GetFiles(source))
         {
             var relativePath = Path.GetRelativePath(source, file);
@@ -138,6 +150,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
             }
         }
 
+        // Call SyncDirectories recursively for each subdirectory in source
         foreach (var dir in Directory.GetDirectories(source))
         {
             var relativePath = Path.GetRelativePath(source, dir);
@@ -148,9 +161,16 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
                 Directory.CreateDirectory(replicaDirPath);
             }
 
-            SyncDirectories(dir, replicaDirPath);
+            SyncCreationInDirectories(dir, replicaDirPath);
         }
+    }
 
+    private void SyncRemovalInDirectories(string source, string replica)
+    {
+        source = source.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        replica = replica.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+
+        // Remove files from replica that do not exist in source
         foreach (var file in Directory.GetFiles(replica))
         {
             var relativePath = Path.GetRelativePath(replica, file);
@@ -162,6 +182,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
             }
         }
 
+        // Call SyncRemovalInDirectories recursively for each subdirectory in replica or remove if not exist in source
         foreach (var dir in Directory.GetDirectories(replica))
         {
             var relativePath = Path.GetRelativePath(replica, dir);
@@ -170,6 +191,21 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
             if (!Directory.Exists(sourceDirPath))
             {
                 Directory.Delete(dir, true);
+            } else
+            {
+                SyncRemovalInDirectories(sourceDirPath, dir);
+            }
+        }
+
+        // Call SyncDirectories recursively for each subdirectory in replica
+        foreach (var dir in Directory.GetDirectories(replica))
+        {
+            var relativePath = Path.GetRelativePath(replica, dir);
+            var sourceDirPath = Path.Combine(source, relativePath);
+
+            if (Directory.Exists(sourceDirPath))
+            {
+                SyncRemovalInDirectories(sourceDirPath, dir);
             }
         }
     }
@@ -188,6 +224,7 @@ class Program
             return;
         }
 
+        // Validate interval
         if (!int.TryParse(args[3], out int interval) || interval <= 0)
         {
             Console.WriteLine(UsageMessage);
@@ -205,6 +242,7 @@ class Program
             return;
         }
 
+        // Check if source directory exists, if not create it.
         if (!Directory.Exists(args[0]))
         {
             try
@@ -219,6 +257,7 @@ class Program
             }
         }
 
+        // Check if replica directory exists, if not create it.
         if (!Directory.Exists(args[1]))
         {
             try
@@ -238,6 +277,7 @@ class Program
         synchronizer.Start(interval);
     }
 
+    // Checks if a file is inside a given directory by comparing full paths.
     private static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
     {
         string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
