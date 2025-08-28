@@ -1,10 +1,6 @@
 ﻿using System.Collections;
 using System.Security.Cryptography;
 
-// Directories could be synchronized in the same way,
-// but since synchronization is periodic and it is more reliable to fully check the directories,
-// we use FileSystemWatcher only for logging changes.
-// Additionally, this approach provides more accurate timestamps in the logs.
 class Logger : IDisposable
 {
     private readonly object lockObj = new object();
@@ -110,6 +106,10 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
         }
     }
 
+    // Directories could be synchronized in the same way,
+    // but since synchronization is periodic and it is more reliable to fully check the directories,
+    // we use FileSystemWatcher only for logging changes.
+    // Additionally, this approach provides more accurate timestamps in the logs.
     private void InitLogging()
     {
         FileSystemWatcher watcher = new FileSystemWatcher();
@@ -142,7 +142,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
     }
 
     // Files are considered equal if their MD5 hashes match.
-    private static bool FilesEqual(string f1, string f2)
+    public static bool FilesEqual(string f1, string f2)
     {
         using var md5 = MD5.Create();
         using var stream1 = File.OpenRead(f1);
@@ -189,7 +189,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
         }
     }
 
-    private void SyncCreationInDirectories(string source, string replica)
+    public static void SyncCreationInDirectories(string source, string replica)
     {
         source = source.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         replica = replica.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -221,7 +221,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
         }
     }
 
-    private void SyncRemovalInDirectories(string source, string replica)
+    public static void SyncRemovalInDirectories(string source, string replica)
     {
         source = source.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         replica = replica.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -248,18 +248,6 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
             {
                 Directory.Delete(dir, true);
             } else
-            {
-                SyncRemovalInDirectories(sourceDirPath, dir);
-            }
-        }
-
-        // Call SyncDirectories recursively for each subdirectory in replica
-        foreach (var dir in Directory.GetDirectories(replica))
-        {
-            var relativePath = Path.GetRelativePath(replica, dir);
-            var sourceDirPath = Path.Combine(source, relativePath);
-
-            if (Directory.Exists(sourceDirPath))
             {
                 SyncRemovalInDirectories(sourceDirPath, dir);
             }
@@ -334,7 +322,7 @@ class Program
     }
 
     // Checks if a file is inside a given directory by comparing full paths.
-    private static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
+    public static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
     {
         string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         string fullFilePath = Path.GetFullPath(filePath);
