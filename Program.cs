@@ -10,31 +10,57 @@ class Logger : IDisposable
     private readonly object lockObj = new object();
     private StreamWriter writer;
     private bool disposed = false;
+    private string logFilePath;
+    private bool error = false;
 
     public Logger(string logFilePath)
     {
-        if (!File.Exists(logFilePath))
+        try
         {
-            try
-            {
-                using (File.Create(logFilePath)) { }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error creating log file: {ex.Message}");
-            }
+            writer = new StreamWriter(logFilePath, true);
         }
-        writer = new StreamWriter(logFilePath, true);
+        catch (Exception ex)
+        {
+            throw new Exception($"Error opening log file: {ex.Message}");
+        }
+        this.logFilePath = logFilePath;
     }
 
     public void Log(string message)
     {
         lock (lockObj)
         {
-            var fmessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
-            Console.WriteLine(fmessage);
-            writer.WriteLine(fmessage);
-            writer.Flush();
+            try
+            {
+                var fmessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
+                Console.WriteLine(fmessage);
+                writer.WriteLine(fmessage);
+                writer.Flush();
+            }
+            catch (Exception ex)
+            {
+                if (!error && !File.Exists(logFilePath))
+                {
+                    Console.Error.WriteLine($"Error writing to log file: {ex.Message}");
+                    Console.WriteLine("Trying to recreate log file...");
+                    try
+                    {
+                        writer?.Dispose();
+                        writer = new StreamWriter(logFilePath, true);
+                        error = false;
+                    }
+                    catch (Exception ex2)
+                    {
+                        Console.Error.WriteLine($"Error recreating log file: {ex2.Message}");
+                        throw;
+                    }
+                    error = true;
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 
@@ -62,6 +88,7 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
     private readonly string sourceDir = sourceDir;
     private readonly string replicaDir = replicaDir;
     private readonly Logger logger = logger;
+    private bool error = false;
 
     public void Start(int interval)
     {
@@ -129,8 +156,37 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
 
     private void SyncDirectories(string source, string replica)
     {
-        SyncCreationInDirectories(source, replica);
-        SyncRemovalInDirectories(source, replica);
+        try
+        {
+            SyncCreationInDirectories(source, replica);
+            SyncRemovalInDirectories(source, replica);
+        }
+        catch (Exception)
+        {
+            if (!Directory.Exists(source))
+            {
+                logger.Log($"Source directory '{source}' does not exist.");
+                throw;
+            }
+            if (!error && !Directory.Exists(replica))
+            {
+                logger.Log($"Replica directory '{replica}' does not exist. Trying to recreate it.");
+                try
+                {
+                    Directory.CreateDirectory(replica);
+                    error = false;
+                }
+                catch (Exception ex2)
+                {
+                    logger.Log($"Error creating replica directory: {ex2.Message}");
+                    throw;
+                }
+            }
+            else
+            {
+                throw;
+            }
+        }
     }
 
     private void SyncCreationInDirectories(string source, string replica)
