@@ -7,7 +7,6 @@ class Logger : IDisposable
     private StreamWriter writer;
     private bool disposed = false;
     private string logFilePath;
-    private bool error = false;
 
     public Logger(string logFilePath)
     {
@@ -35,7 +34,7 @@ class Logger : IDisposable
             }
             catch (Exception ex)
             {
-                if (!error && !File.Exists(logFilePath))
+                if (!File.Exists(logFilePath))
                 {
                     Console.Error.WriteLine($"Error writing to log file: {ex.Message}");
                     Console.WriteLine("Trying to recreate log file...");
@@ -43,14 +42,12 @@ class Logger : IDisposable
                     {
                         writer?.Dispose();
                         writer = new StreamWriter(logFilePath, true);
-                        error = false;
                     }
                     catch (Exception ex2)
                     {
                         Console.Error.WriteLine($"Error recreating log file: {ex2.Message}");
                         throw;
                     }
-                    error = true;
                 }
                 else
                 {
@@ -84,7 +81,6 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
     private readonly string sourceDir = sourceDir;
     private readonly string replicaDir = replicaDir;
     private readonly Logger logger = logger;
-    private bool error = false;
 
     public void Start(int interval)
     {
@@ -168,13 +164,12 @@ class DirectorySynchronizer(string sourceDir, string replicaDir, Logger logger)
                 logger.Log($"Source directory '{source}' does not exist.");
                 throw;
             }
-            if (!error && !Directory.Exists(replica))
+            if (!Directory.Exists(replica))
             {
                 logger.Log($"Replica directory '{replica}' does not exist. Trying to recreate it.");
                 try
                 {
                     Directory.CreateDirectory(replica);
-                    error = false;
                 }
                 catch (Exception ex2)
                 {
