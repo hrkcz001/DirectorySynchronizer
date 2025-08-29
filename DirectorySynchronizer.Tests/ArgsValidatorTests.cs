@@ -40,7 +40,7 @@ namespace DirectorySynchronizer.Tests
         [Fact]
         public void ValidateArgs_CorrectArgs_DoesNotThrow()
         {
-            string[] args = { tempSource, tempReplica, tempLog, "5" };
+            string[] args = [tempSource, tempReplica, tempLog, "5"];
             Exception ex = Record.Exception(() => ArgsValidator.ValidateArgs(args));
             Assert.Null(ex);
 
@@ -68,7 +68,7 @@ namespace DirectorySynchronizer.Tests
         [InlineData("5.5")]
         public void ValidateArgs_InvalidInterval_Throws(string interval)
         {
-            string[] args = { tempSource, tempReplica, tempLog, interval };
+            string[] args = [tempSource, tempReplica, tempLog, interval];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Interval must be a positive integer.", ex.Message);
         }
@@ -78,7 +78,7 @@ namespace DirectorySynchronizer.Tests
         {
             string subDir = Path.Combine(tempReplica, "sub");
 
-            string[] args = { subDir, tempReplica, tempLog, "5" };
+            string[] args = [subDir, tempReplica, tempLog, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -88,7 +88,7 @@ namespace DirectorySynchronizer.Tests
         {
             string subDir = Path.Combine(tempSource, "sub");
 
-            string[] args = { tempSource, subDir, tempLog, "5" };
+            string[] args = [tempSource, subDir, tempLog, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -98,7 +98,7 @@ namespace DirectorySynchronizer.Tests
         {
             string logPath = Path.Combine(tempSource, "log.txt");
 
-            string[] args = { tempSource, tempReplica, logPath, "5" };
+            string[] args = [tempSource, tempReplica, logPath, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -108,7 +108,7 @@ namespace DirectorySynchronizer.Tests
         {
             string logPath = Path.Combine(tempReplica, "log.txt");
 
-            string[] args = { tempSource, tempReplica, logPath, "5" };
+            string[] args = [tempSource, tempReplica, logPath, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -118,7 +118,7 @@ namespace DirectorySynchronizer.Tests
         {
             string newSorce = Path.Combine(tempLog, "source");
 
-            string[] args = { newSorce, tempReplica, tempLog, "5" };
+            string[] args = [newSorce, tempReplica, tempLog, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -128,7 +128,7 @@ namespace DirectorySynchronizer.Tests
         {
             string newReplica = Path.Combine(tempLog, "replica");
 
-            string[] args = { tempSource, newReplica, tempLog, "5" };
+            string[] args = [tempSource, newReplica, tempLog, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -136,7 +136,7 @@ namespace DirectorySynchronizer.Tests
         [Fact]
         public void ValidateArgs_SameSourceAndReplica_Throws()
         {
-            string[] args = { tempSource, tempSource, tempLog, "5" };
+            string[] args = [tempSource, tempSource, tempLog, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -144,7 +144,7 @@ namespace DirectorySynchronizer.Tests
         [Fact]
         public void ValidateArgs_SameSourceAndLog_Throws()
         {
-            string[] args = { tempSource, tempReplica, tempSource, "5" };
+            string[] args = [tempSource, tempReplica, tempSource, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -152,7 +152,7 @@ namespace DirectorySynchronizer.Tests
         [Fact]
         public void ValidateArgs_SameReplicaAndLog_Throws()
         {
-            string[] args = { tempSource, tempReplica, tempReplica, "5" };
+            string[] args = [tempSource, tempReplica, tempReplica, "5"];
             var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
             Assert.Equal("Source, replica, and log paths must be independent of each other.", ex.Message);
         }
@@ -173,7 +173,7 @@ namespace DirectorySynchronizer.Tests
                 Directory.CreateDirectory(tempReplica);
                 Util.RemoveDirectoryWritePermission(tempReplica);
 
-                string[] args = { tempSource, tempReplica, tempLog, "5" };
+                string[] args = [tempSource, tempReplica, tempLog, "5"];
                 var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
                 Assert.StartsWith("Replica directory is not writable:", ex.Message);
             }
@@ -196,7 +196,7 @@ namespace DirectorySynchronizer.Tests
                 File.WriteAllText(tempLog, "Test log content");
                 Util.RemoveFileWritePermission(tempLog);
 
-                string[] args = { tempSource, tempReplica, tempLog, "5" };
+                string[] args = [tempSource, tempReplica, tempLog, "5"];
                 var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
                 Assert.StartsWith("Error accessing log file:", ex.Message);
             }
@@ -219,7 +219,7 @@ namespace DirectorySynchronizer.Tests
                 Directory.CreateDirectory(tempSource);
                 Util.RemoveDirectoryReadPermission(tempSource); // Using write permission removal to simulate lack of access
 
-                string[] args = { tempSource, tempReplica, tempLog, "5" };
+                string[] args = [tempSource, tempReplica, tempLog, "5"];
                 var ex = Assert.Throws<ArgumentException>(() => ArgsValidator.ValidateArgs(args));
                 Assert.StartsWith("Source directory is not readable:", ex.Message);
             }
