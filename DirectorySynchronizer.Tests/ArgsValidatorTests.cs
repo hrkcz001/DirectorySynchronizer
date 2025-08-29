@@ -229,7 +229,10 @@ namespace DirectorySynchronizer.Tests
                 Util.RestoreDirectoryReadPermission(tempSource);
             }
         }
+    }
 
+    public class IsFileInsideDirectory_Tests
+    {
         // Windows test for IsFileInsideDirectory method
         [SkippableTheory]
         [InlineData("C:\\Dir\\File", "C:\\Dir", true)]
@@ -237,6 +240,7 @@ namespace DirectorySynchronizer.Tests
         [InlineData("C:\\Dir\\Subdir\\File", "C:\\Dir", true)]
         [InlineData("C:\\dir\\File", "C:\\Dir", true)]
         [InlineData("C:\\File", "C:\\Dir", false)]
+        [InlineData("C:\\Dir1", "C:\\Dir", false)]
         public void IsFileInsideDirectory_WindowsTests(string filePath, string dirPath, bool expected)
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Test runs only on Windows.");
@@ -252,6 +256,7 @@ namespace DirectorySynchronizer.Tests
         [InlineData("/dir/subdir/file", "/dir", true)]
         [InlineData("/dir/file", "/Dir", true)]
         [InlineData("/file", "/dir", false)]
+        [InlineData("/dir1", "/dir", false)]
         public void IsFileInsideDirectory_UnixTests(string dirPath, string filePath, bool expected)
         {
 

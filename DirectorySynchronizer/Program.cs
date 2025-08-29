@@ -26,6 +26,11 @@ namespace DirectorySynchronizer
 
             try
             {
+                Console.CancelKeyPress += (sender, e) =>
+                {
+                    e.Cancel = true;
+                    synchronizer.Stop();
+                };
                 synchronizer.Start(int.Parse(args[3]));
             }
             catch (Exception ex)

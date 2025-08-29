@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace DirectorySynchronizer.src
 {
     // Checks command-line arguments, validates paths.
@@ -65,8 +67,9 @@ namespace DirectorySynchronizer.src
             {
                 try
                 {
-                    var file = File.Create(Path.Combine(args[1], "tempfile.tmp"));
-                    File.Delete(file.Name);
+                    var filePath = Path.Combine(args[1], "tempfile");
+                    File.Create(filePath).Close();
+                    File.Delete(filePath);
                 }
                 catch (Exception ex)
                 {
@@ -88,8 +91,8 @@ namespace DirectorySynchronizer.src
         // Checks if a file is inside a given directory by comparing full paths.
         public static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
         {
-            string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar);
-            string fullFilePath = Path.GetFullPath(filePath);
+            string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            string fullFilePath = Path.GetFullPath(filePath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 
             return fullFilePath.StartsWith(fullDirectoryPath, StringComparison.OrdinalIgnoreCase);
         }

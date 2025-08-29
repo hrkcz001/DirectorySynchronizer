@@ -11,21 +11,37 @@ namespace DirectorySynchronizer.src
         private readonly string sourceDir = sourceDir;
         private readonly string replicaDir = replicaDir;
         private readonly Logger logger = logger;
+        public bool Running = false;
 
         public void Start(int interval)
         {
             InitLogging();
+            Running = true;
             try
             {
-                while (true)
+                while (Running)
                 {
                     SyncDirectories(sourceDir, replicaDir);
-                    Thread.Sleep(interval * 1000);
+                    var timeLeft = interval;
+                    while (Running && timeLeft > 0)
+                    {
+                        Thread.Sleep(1000);
+                        timeLeft--;
+                    }
                 }
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error during synchronization: {ex.Message}");
+            }
+        }
+
+        public void Stop()
+        {
+            if (Running)
+            {
+                logger.Log("Synchronization cancelled.");
+                Running = false;
             }
         }
 

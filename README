@@ -1,5 +1,4 @@
 Usage: <source> <replica> <log> <interval>
 
-Interval must be a positive integer.
+Interval must be a positive integer, representing time in seconds.
 Source, replica, and log paths must be independent of each other.
-
