@@ -136,12 +136,13 @@ namespace DirectorySynchronizer.src
             {
                 if (!Directory.Exists(source))
                 {
-                    logger.Log($"Source directory '{source}' does not exist.");
-                    throw;
+                    logger.Log($"Error: Source directory '{source}' does not exist.");
+                    Stop();
+                    return;
                 }
                 if (!Directory.Exists(replica))
                 {
-                    logger.Log($"Replica directory '{replica}' does not exist. Trying to recreate it.");
+                    logger.Log($"Warning: Replica directory '{replica}' does not exist. Trying to recreate it.");
                     try
                     {
                         Directory.CreateDirectory(replica);
@@ -150,8 +151,9 @@ namespace DirectorySynchronizer.src
                     }
                     catch (Exception ex2)
                     {
-                        logger.Log($"Error creating replica directory: {ex2.Message}");
-                        throw;
+                        logger.Log($"Error: Failed to create replica directory: {ex2.Message}");
+                        Stop();
+                        return;
                     }
                 }
                 else
