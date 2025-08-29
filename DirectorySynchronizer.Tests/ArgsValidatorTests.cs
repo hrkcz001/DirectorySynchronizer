@@ -5,9 +5,10 @@ namespace DirectorySynchronizer.Tests
 {
     public class ArgsValidatorTests : IDisposable
     {
-        private string tempSource;
-        private string tempReplica;
-        private string tempLog;
+        private readonly string tempSource;
+        private readonly string tempReplica;
+        private readonly string tempLog;
+        private bool disposed = false;
 
         public ArgsValidatorTests()
         {
@@ -18,9 +19,22 @@ namespace DirectorySynchronizer.Tests
 
         public void Dispose()
         {
-            if (Directory.Exists(tempSource)) Directory.Delete(tempSource, true);
-            if (Directory.Exists(tempReplica)) Directory.Delete(tempReplica, true);
-            if (File.Exists(tempLog)) File.Delete(tempLog);
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    if (Directory.Exists(tempSource)) Directory.Delete(tempSource, true);
+                    if (Directory.Exists(tempReplica)) Directory.Delete(tempReplica, true);
+                    if (File.Exists(tempLog)) File.Delete(tempLog);
+                }
+                disposed = true;
+            }
         }
 
         [Fact]
