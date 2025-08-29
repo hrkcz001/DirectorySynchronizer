@@ -72,12 +72,34 @@ namespace DirectorySynchronizer.src
 
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            logger.Log($"File: {e.FullPath} {e.ChangeType}");
+            if (Directory.Exists(e.FullPath))
+            {
+                logger.Log($"Directory: {e.FullPath} ({e.ChangeType})");
+            }
+            else if (File.Exists(e.FullPath))
+            {
+                logger.Log($"File: {e.FullPath} ({e.ChangeType})");
+            }
+            else
+            {
+                logger.Log($"File/Directory: {e.FullPath} ({e.ChangeType})");
+            }
         }
 
         private void OnRenamed(object source, RenamedEventArgs e)
         {
-            logger.Log($"File: {e.OldFullPath} renamed to {e.FullPath}");
+            if (Directory.Exists(e.FullPath))
+            {
+                logger.Log($"Directory: {e.OldFullPath} renamed to {e.FullPath}");
+            }
+            else if (File.Exists(e.FullPath))
+            {
+                logger.Log($"File: {e.OldFullPath} renamed to {e.FullPath}");
+            }
+            else
+            {
+                logger.Log($"File/Directory: {e.OldFullPath} renamed to {e.FullPath}");
+            }
         }
 
         // Files are considered equal if their MD5 hashes match.
@@ -123,6 +145,8 @@ namespace DirectorySynchronizer.src
                     try
                     {
                         Directory.CreateDirectory(replica);
+                        SyncCreationInDirectories(source, replica);
+                        SyncRemovalInDirectories(source, replica);
                     }
                     catch (Exception ex2)
                     {

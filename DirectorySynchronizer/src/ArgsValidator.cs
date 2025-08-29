@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace DirectorySynchronizer.src
 {
     // Checks command-line arguments, validates paths.
@@ -7,43 +5,54 @@ namespace DirectorySynchronizer.src
     {
         public static void ValidateArgs(string[] args)
         {
-            // Check for correct number of arguments
             if (args.Length != 4)
             {
                 throw new ArgumentException("Invalid number of arguments.");
             }
 
-            // Validate interval
+            var sourcePath = args[0];
+            var replicaPath = args[1];
+            var logPath = args[2];
+
             if (!int.TryParse(args[3], out int interval) || interval <= 0)
             {
                 throw new ArgumentException("Interval must be a positive integer.");
             }
 
+            FileSystemValidator.ValidatePaths(sourcePath, replicaPath, logPath);
+        }
+    }
+
+    class FileSystemValidator
+    {
+        public static void ValidatePaths(string sourcePath, string replicaPath, string logPath)
+        {
             // If any of the paths are inside each other, it could lead to unexpected behavior.
-            if (IsFileInsideDirectory(args[0], args[1]) || IsFileInsideDirectory(args[1], args[0])
-                || IsFileInsideDirectory(args[0], args[2]) || IsFileInsideDirectory(args[2], args[0])
-                || IsFileInsideDirectory(args[1], args[2]) || IsFileInsideDirectory(args[2], args[1]))
+            if (IsFileInsideDirectory(sourcePath, replicaPath) || IsFileInsideDirectory(replicaPath, sourcePath)
+                || IsFileInsideDirectory(sourcePath, logPath) || IsFileInsideDirectory(logPath, sourcePath)
+                || IsFileInsideDirectory(replicaPath, logPath) || IsFileInsideDirectory(logPath, replicaPath))
             {
                 throw new ArgumentException("Source, replica, and log paths must be independent of each other.");
             }
 
             // Check if source directory exists, if not create it.
-            if (!Directory.Exists(args[0]))
+            if (!Directory.Exists(sourcePath))
             {
                 try
                 {
-                    Directory.CreateDirectory(args[0]);
+                    Directory.CreateDirectory(sourcePath);
                 }
                 catch (Exception ex)
                 {
                     throw new ArgumentException($"Error creating source Directory: {ex.Message}");
                 }
             }
-            else 
+            else
             {
+                // Check if source directory is readable.
                 try
                 {
-                    _ = Directory.EnumerateFiles(args[0]).FirstOrDefault();
+                    _ = Directory.EnumerateFiles(sourcePath).FirstOrDefault();
                 }
                 catch (Exception ex)
                 {
@@ -52,11 +61,11 @@ namespace DirectorySynchronizer.src
             }
 
             // Check if replica directory exists, if not create it.
-            if (!Directory.Exists(args[1]))
+            if (!Directory.Exists(replicaPath))
             {
                 try
                 {
-                    Directory.CreateDirectory(args[1]);
+                    Directory.CreateDirectory(replicaPath);
                 }
                 catch (Exception ex)
                 {
@@ -65,10 +74,22 @@ namespace DirectorySynchronizer.src
             }
             else
             {
+                // Check if replica directory is writable.
                 try
                 {
-                    var filePath = Path.Combine(args[1], "tempfile");
-                    File.Create(filePath).Close();
+                    var i = 0;
+                    var filePath = Path.Combine(replicaPath, $"dirsync.tempfile{i}");
+                    // Creating a guaranteed missing file
+                    while (File.Exists(filePath))
+                    {
+                        i++;
+                        filePath = Path.Combine(replicaPath, $"dirsync.tempfile{i}");
+                    }
+
+                    var stream = File.CreateText(filePath);
+                    stream.Write("Test");
+                    stream.Flush();
+                    stream.Close();
                     File.Delete(filePath);
                 }
                 catch (Exception ex)
@@ -80,7 +101,7 @@ namespace DirectorySynchronizer.src
             // Check if log file can be created or opened.
             try
             {
-                using var logStream = new FileStream(args[2], FileMode.Append, FileAccess.Write);
+                using var logStream = new FileStream(logPath, FileMode.Append, FileAccess.Write);
             }
             catch (Exception ex)
             {
@@ -89,6 +110,7 @@ namespace DirectorySynchronizer.src
         }
 
         // Checks if a file is inside a given directory by comparing full paths.
+        // Also returns true for same paths.
         public static bool IsFileInsideDirectory(string filePath, string DirectoryPath)
         {
             string fullDirectoryPath = Path.GetFullPath(DirectoryPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
