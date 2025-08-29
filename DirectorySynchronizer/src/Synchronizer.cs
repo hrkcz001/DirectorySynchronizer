@@ -210,7 +210,7 @@ namespace DirectorySynchronizer.src
                 }
             }
 
-            // Call SyncRemovalInDirectories recursively for each subdirectory in replica or remove if not exist in source
+            // Call SyncRemovalInDirectories recursively for each subdirectory in replica or remove if doesn't exist in source
             foreach (var dir in Directory.GetDirectories(replica))
             {
                 var relativePath = Path.GetRelativePath(replica, dir);
