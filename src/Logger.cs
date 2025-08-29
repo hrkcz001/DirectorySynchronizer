@@ -1,4 +1,4 @@
-// Logger class for logging messages to both console and a log file with thread safety and error handling.
+// Logger class for logging messages to both console and a log file with thread safety.
 class Logger : IDisposable
 {
     private readonly object lockObj = new object();
