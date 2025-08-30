@@ -74,6 +74,17 @@ namespace DirectorySynchronizer.src
             }
             else
             {
+
+                // Check if source directory is readable.
+                try
+                {
+                    _ = Directory.EnumerateFiles(replicaPath).FirstOrDefault();
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException($"Replica directory is not readable: {ex.Message}");
+                }
+
                 // Check if replica directory is writable.
                 try
                 {

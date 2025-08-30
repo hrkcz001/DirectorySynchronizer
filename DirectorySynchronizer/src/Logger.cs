@@ -3,10 +3,10 @@ namespace DirectorySynchronizer.src
     // Logger class for logging messages to both console and a log file with thread safety.
     public class Logger : IDisposable
     {
-        private readonly object lockObj = new object();
+        private readonly Lock lockObj = new();
         private StreamWriter writer;
+        private readonly string logFilePath;
         private bool disposed = false;
-        private string logFilePath;
 
         public Logger(string logFilePath)
         {
