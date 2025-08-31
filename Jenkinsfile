@@ -13,7 +13,7 @@ pipeline {
                 bat '''
                      docker run --rm ^
                       -v %WORKSPACE%:C:/workspace ^
-                      -w C:/workspace ^
+                      -w C:\\workspace ^
                       mcr.microsoft.com/dotnet/sdk:9.0-nanoserver-ltsc2025 ^
                       dotnet test
                 '''
