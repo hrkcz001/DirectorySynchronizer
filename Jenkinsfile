@@ -11,6 +11,7 @@ pipeline {
         stage('Test on Windows Docker Container') {
             steps {
                 bat '''
+                     echo %WORKSPACE%
                      docker run --rm ^
                       -v %WORKSPACE%:C:/workspace ^
                       -w C:\\workspace ^
