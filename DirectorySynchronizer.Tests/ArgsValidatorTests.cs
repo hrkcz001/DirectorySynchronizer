@@ -257,7 +257,7 @@ namespace DirectorySynchronizer.Tests
         [InlineData("/dir/file", "/Dir", true)]
         [InlineData("/file", "/dir", false)]
         [InlineData("/dir1", "/dir", false)]
-        public void IsFileInsideDirectory_UnixTests(string dirPath, string filePath, bool expected)
+        public void IsFileInsideDirectory_UnixTests(string filePath, string dirPath, bool expected)
         {
 
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
