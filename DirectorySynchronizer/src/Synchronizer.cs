@@ -11,7 +11,7 @@ namespace DirectorySynchronizer.src
         private readonly string sourceDir = sourceDir;
         private readonly string replicaDir = replicaDir;
         private readonly Logger logger = logger;
-        public bool Running = false;
+        public bool Running { get; private set; } = false;
 
         public void Start(int interval)
         {
@@ -23,7 +23,8 @@ namespace DirectorySynchronizer.src
                 {
                     SyncDirectories(sourceDir, replicaDir);
                     var timeLeft = interval;
-                    while (Running && timeLeft > 0)
+
+                    while (Running && timeLeft > 0) // Sleep in 1 second to respond to stop request
                     {
                         Thread.Sleep(1000);
                         timeLeft--;
