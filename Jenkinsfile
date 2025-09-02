@@ -1,34 +1,31 @@
 pipeline {
-    agent any
+    agent none
 
     stages {
         stage('Load repository') {
+            agent any
             steps {
                 checkout scm
             }
         }
 
-        stage('Test on Windows Docker Container') {
+        stage('Test on Windows') {
+            agent { label 'windows-agent' }
             steps {
                 bat '''
-                     echo %WORKSPACE%
-                     docker run --rm ^
-                      -v %WORKSPACE%:/workspace ^
-                      -w /workspace ^
-                      mcr.microsoft.com/dotnet/sdk:9.0-nanoserver-ltsc2025 ^
-                      dotnet test
+                   ls
                 '''
             }
         }
 
-        /*stage('Test on Linux Docker Container') {
+        stage('Test on Linux') {
+            agent { label 'linux-agent' }
             steps {
                 sh '''
-                    cd /workspace/DirectorySynchronizer.Tests
-                    dotnet add reference ../DirectorySynchronizer/DirectorySynchronizer.csproj
-                    dotnet test
+                   ls
                 '''
             }
-        }*/
+        }
     }
 }
+
