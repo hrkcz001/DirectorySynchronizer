@@ -23,7 +23,7 @@ namespace DirectorySynchronizer.src
         }
     }
 
-    class FileSystemValidator
+    public class FileSystemValidator
     {
         public static void ValidatePaths(string sourcePath, string replicaPath, string logPath)
         {

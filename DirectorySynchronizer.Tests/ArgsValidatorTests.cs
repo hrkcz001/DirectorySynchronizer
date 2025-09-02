@@ -245,7 +245,7 @@ namespace DirectorySynchronizer.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Test runs only on Windows.");
 
-            bool result = ArgsValidator.IsFileInsideDirectory(filePath, dirPath);
+            bool result = FileSystemValidator.IsFileInsideDirectory(filePath, dirPath);
             Assert.Equal(expected, result);
         }
 
@@ -265,7 +265,7 @@ namespace DirectorySynchronizer.Tests
                        RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
                        "Test runs only on Unix, FreeBSD and MacOS systems.");
 
-            bool result = ArgsValidator.IsFileInsideDirectory(filePath, dirPath);
+            bool result = FileSystemValidator.IsFileInsideDirectory(filePath, dirPath);
             Assert.Equal(expected, result);
         }
     }
