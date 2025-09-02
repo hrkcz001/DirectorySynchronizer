@@ -13,7 +13,8 @@ pipeline {
             agent { label 'windows-agent' }
             steps {
                 bat '''
-                   ls
+                   cd DirectorySynchronizer.Tests
+                   dotnet test
                 '''
             }
         }
@@ -22,7 +23,8 @@ pipeline {
             agent { label 'linux-agent' }
             steps {
                 sh '''
-                   ls
+                   cd DirectorySynchronizer.Tests
+                   dotnet test
                 '''
             }
         }
