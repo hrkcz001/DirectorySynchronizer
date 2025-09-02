@@ -19,6 +19,17 @@ pipeline {
             }
         }
 
+        stage('Build on Windows') {
+            agent { label 'windows-agent' }
+            when {
+                branch 'main'
+            }
+            steps {
+                //TODO:
+                bat 'echo "Building and publishing"'
+            }
+        }
+
         stage('Test on Linux') {
             agent { label 'linux-agent' }
             steps {
@@ -26,6 +37,17 @@ pipeline {
                    cd DirectorySynchronizer.Tests
                    dotnet test
                 '''
+            }
+        }
+
+        stage('Build on Linux') {
+            agent { label 'linux-agent' }
+            when {
+                branch 'main'
+            }
+            steps {
+                //TODO:
+                sh 'echo "Building and publishing"'
             }
         }
     }
