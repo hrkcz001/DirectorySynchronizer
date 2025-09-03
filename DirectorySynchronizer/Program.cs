@@ -2,13 +2,30 @@
 
 namespace DirectorySynchronizer
 {
+    public class StopWrapper
+    {
+        public Func<bool> Func { get; set; } = () => { return false; };
+        public bool Invoke() => Func();
+    }
+
     // Main program file for the Directory Synchronizer application.
     // It validates command-line arguments, initializes logging, and starts the synchronization process.
-    class Program
+    public class Program
     {
         const string UsageMessage = "Usage: <source> <replica> <log> <interval>";
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
+        {
+            var stopWrapper = new StopWrapper();
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                e.Cancel = stopWrapper.Invoke();
+            };
+            Run(args, stopWrapper);
+        }
+
+        // stopWrapper is used to pass the stop function, for testing or for handling Ctrl+C etc.
+        public static void Run(string[] args, StopWrapper stopWrapper)
         {
             try
             {
@@ -23,14 +40,14 @@ namespace DirectorySynchronizer
 
             using var logger = new Logger(args[2]);
             var synchronizer = new Synchronizer(args[0], args[1], logger);
+            stopWrapper.Func = () =>
+            {
+                synchronizer.Stop();
+                return true;
+            };
 
             try
             {
-                Console.CancelKeyPress += (sender, e) =>
-                {
-                    e.Cancel = true;
-                    synchronizer.Stop();
-                };
                 synchronizer.Start(int.Parse(args[3]));
             }
             catch (Exception ex)

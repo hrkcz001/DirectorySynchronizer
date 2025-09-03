@@ -12,10 +12,12 @@ namespace DirectorySynchronizer.src
         private readonly string replicaDir = replicaDir;
         private readonly Logger logger = logger;
         public bool Running { get; private set; } = false;
+        private readonly Lock stopLock = new();
 
         public void Start(int interval)
         {
             InitLogging();
+            logger.Log("Synchronization started.");
             Running = true;
             try
             {
@@ -24,25 +26,34 @@ namespace DirectorySynchronizer.src
                     SyncDirectories(sourceDir, replicaDir);
                     var timeLeft = interval;
 
-                    while (Running && timeLeft > 0) // Sleep in 1 second to respond to stop request
+                    while (Running && timeLeft > 0) // Sleep a second at a time to respond to stop request
                     {
                         Thread.Sleep(1000);
                         timeLeft--;
                     }
                 }
             }
+            catch (ThreadInterruptedException){}
             catch (Exception ex)
             {
                 throw new Exception($"Error during synchronization: {ex.Message}");
+            }
+            finally
+            {
+                Running = false;
+                logger.Log("Synchronization stopped.");
             }
         }
 
         public void Stop()
         {
-            if (Running)
+            lock (stopLock)
             {
-                logger.Log("Synchronization cancelled.");
-                Running = false;
+                if (Running)
+                {
+                    logger.Log("Synchronization cancelled.");
+                    Running = false;
+                }
             }
         }
 

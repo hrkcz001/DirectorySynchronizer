@@ -5,7 +5,6 @@ namespace DirectorySynchronizer.Tests
     public class LoggerTests : IDisposable
     {
         private readonly string tempFile;
-        private bool disposed = false;
 
         public LoggerTests()
         {
@@ -14,20 +13,7 @@ namespace DirectorySynchronizer.Tests
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    if (File.Exists(tempFile)) File.Delete(tempFile);
-                }
-                disposed = true;
-            }
+            if (File.Exists(tempFile)) File.Delete(tempFile);
         }
 
         [Fact]
@@ -48,8 +34,6 @@ namespace DirectorySynchronizer.Tests
         [Fact]
         public void Logger_CreatesFile_Test()
         {
-            if (File.Exists(tempFile)) File.Delete(tempFile);
-
             using (var logger = new Logger(tempFile))
             {
                 logger.Log("Test");
@@ -58,8 +42,6 @@ namespace DirectorySynchronizer.Tests
             Assert.True(File.Exists(tempFile));
             string content = File.ReadAllText(tempFile);
             Assert.Contains("Test", content);
-
-            File.Delete(tempFile);
         }
 
         [Fact]
@@ -75,15 +57,12 @@ namespace DirectorySynchronizer.Tests
             string content = File.ReadAllText(tempFile);
             Assert.Contains("Test", content);
             Assert.Matches(@"\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]", content);
-
-            File.Delete(tempFile);
         }
     }
 
     public class LoggerConcurrencyTests : IDisposable
     {
         private readonly string tempFile;
-        private bool disposed = false;
 
         public LoggerConcurrencyTests()
         {
@@ -92,20 +71,7 @@ namespace DirectorySynchronizer.Tests
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    if (File.Exists(tempFile)) File.Delete(tempFile);
-                }
-                disposed = true;
-            }
+            if (File.Exists(tempFile)) File.Delete(tempFile);
         }
 
         [Fact]
