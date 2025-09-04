@@ -8,7 +8,7 @@ namespace DirectorySynchronizer.src
 
         // Directories could be synchronized in the same way,
         // but since synchronization is periodic and it is more reliable to fully check the directories,
-        // we use FileSystemWatcher only for logging changes.
+        // I used FileSystemWatcher only for logging changes.
         // Additionally, this approach provides more accurate timestamps in the logs.
         public void InitLogging()
         {
