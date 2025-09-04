@@ -23,6 +23,8 @@ namespace DirectorySynchronizer.src
         }
     }
 
+    // Validates the file system paths for source, replica, and log.
+    // Ensures directories exist(creates them if not) and are accessible, and that paths do not overlap.
     public class FileSystemValidator
     {
         public static void ValidatePaths(string sourcePath, string replicaPath, string logPath)

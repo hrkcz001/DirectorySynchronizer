@@ -10,13 +10,11 @@ namespace DirectorySynchronizer.src
     {
         private readonly string sourceDir = sourceDir;
         private readonly string replicaDir = replicaDir;
-        private readonly Logger logger = logger;
         public bool Running { get; private set; } = false;
         private readonly Lock stopLock = new();
 
         public void Start(int interval)
         {
-            InitLogging();
             logger.Log("Synchronization started.");
             Running = true;
             try
@@ -26,6 +24,9 @@ namespace DirectorySynchronizer.src
                     SyncDirectories(sourceDir, replicaDir);
                     var timeLeft = interval;
 
+
+                    // Better approach to synchronization would be to trigger recheck on each directory change event.
+                    // But task was to synchronize periodically, so I stick to that.
                     while (Running && timeLeft > 0) // Sleep a second at a time to respond to stop request
                     {
                         Thread.Sleep(1000);
@@ -54,63 +55,6 @@ namespace DirectorySynchronizer.src
                     logger.Log("Synchronization cancelled.");
                     Running = false;
                 }
-            }
-        }
-
-        // Directories could be synchronized in the same way,
-        // but since synchronization is periodic and it is more reliable to fully check the directories,
-        // we use FileSystemWatcher only for logging changes.
-        // Additionally, this approach provides more accurate timestamps in the logs.
-        private void InitLogging()
-        {
-            FileSystemWatcher watcher = new FileSystemWatcher();
-            watcher.Path = sourceDir;
-            watcher.IncludeSubdirectories = true;
-
-            watcher.Created += OnChanged;
-            watcher.Changed += OnChanged;
-            watcher.Deleted += OnChanged;
-            watcher.Renamed += OnRenamed;
-
-            watcher.NotifyFilter = NotifyFilters.FileName |
-                                NotifyFilters.DirectoryName |
-                                NotifyFilters.LastWrite |
-                                NotifyFilters.Size;
-
-            watcher.Filter = "*.*";
-
-            watcher.EnableRaisingEvents = true;
-        }
-
-        private void OnChanged(object source, FileSystemEventArgs e)
-        {
-            if (Directory.Exists(e.FullPath))
-            {
-                logger.Log($"Directory: {e.FullPath} ({e.ChangeType})");
-            }
-            else if (File.Exists(e.FullPath))
-            {
-                logger.Log($"File: {e.FullPath} ({e.ChangeType})");
-            }
-            else
-            {
-                logger.Log($"File/Directory: {e.FullPath} ({e.ChangeType})");
-            }
-        }
-
-        private void OnRenamed(object source, RenamedEventArgs e)
-        {
-            if (Directory.Exists(e.FullPath))
-            {
-                logger.Log($"Directory: {e.OldFullPath} renamed to {e.FullPath}");
-            }
-            else if (File.Exists(e.FullPath))
-            {
-                logger.Log($"File: {e.OldFullPath} renamed to {e.FullPath}");
-            }
-            else
-            {
-                logger.Log($"File/Directory: {e.OldFullPath} renamed to {e.FullPath}");
             }
         }
 
