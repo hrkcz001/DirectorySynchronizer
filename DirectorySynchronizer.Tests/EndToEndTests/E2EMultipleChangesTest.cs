@@ -20,17 +20,13 @@ namespace DirectorySynchronizer.Tests
             // Wait a bit to ensure the initial copy is done
             Thread.Sleep(secondsToLive * 1000 / 3);
 
-            var initialCopyDone = true;
             for (int i = 0; i < numberOfFiles; i++)
             {
                 var replicaFile = Path.Combine(replicaDir, $"file_{i}");
-                if (!File.Exists(replicaFile) || File.ReadAllText(replicaFile) != $"content_{i}")
-                {
-                    initialCopyDone = false;
-                    break;
-                }
+                Assert.False(!File.Exists(replicaFile) ||
+                              File.ReadAllText(replicaFile) != $"content_{i}"
+                             , $"Initial creation of {replicaFile} failed");
             }
-            Assert.True(initialCopyDone);
 
             // Modification
             for (int i = 0; i < numberOfFiles; i++)
@@ -62,39 +58,31 @@ namespace DirectorySynchronizer.Tests
             // Wait a bit to ensure the modifications are processed
             Thread.Sleep(secondsToLive * 1000 / 3);
 
-            var modificationDone = true;
             for (int i = 0; i < numberOfFiles; i++)
             {
                 var replicaFile = Path.Combine(replicaDir, $"file_{i}");
-                if (!File.Exists(replicaFile) ||
-                     File.ReadAllText(replicaFile) != $"content_{i}_modified")
-                {
-                    modificationDone = false;
-                    break;
-                }
+                Assert.False(!File.Exists(replicaFile) ||
+                              File.ReadAllText(replicaFile) != $"content_{i}_modified"
+                             , $"Modification of {replicaFile} failed");
 
                 var replicaSubDir = Path.Combine(replicaDir, $"subdir_{i}");
                 var replicaSubDirFile = Path.Combine(replicaSubDir, $"file_in_subdir_{i}");
-                if (!Directory.Exists(replicaSubDir) ||
-                    !File.Exists(replicaSubDirFile) ||
-                     File.ReadAllText(replicaSubDirFile) != $"content_in_subdir_{i}")
-                {
-                    modificationDone = false;
-                    break;
-                }
+                Assert.False(!Directory.Exists(replicaSubDir) ||
+                             !File.Exists(replicaSubDirFile) ||
+                              File.ReadAllText(replicaSubDirFile) != $"content_in_subdir_{i}"
+                             , $"Modification of {replicaSubDirFile} failed");
 
                 for (int j = 0; j < numberOfFiles; j++)
                 {
                     var nestedReplicaSubDir = Path.Combine(replicaSubDir, $"nested_subdir_{j}");
                     var nestedReplicaFile = Path.Combine(nestedReplicaSubDir, $"file_in_nested_subdir_{j}");
-                    if (!Directory.Exists(nestedReplicaSubDir) || !File.Exists(nestedReplicaFile) || File.ReadAllText(nestedReplicaFile) != $"content_in_nested_subdir_{j}")
-                    {
-                        modificationDone = false;
-                        break;
-                    }
+                    Assert.False(!Directory.Exists(nestedReplicaSubDir) ||
+                                 !File.Exists(nestedReplicaFile)        ||
+                                  File.ReadAllText(nestedReplicaFile) != $"content_in_nested_subdir_{j}"
+                                 , $"Modification of {nestedReplicaFile} failed");
+                    
                 }
             }
-            Assert.True(modificationDone);
 
             // Deletion
             for (int i = 0; i < numberOfFiles; i++)
@@ -111,10 +99,10 @@ namespace DirectorySynchronizer.Tests
             for (int i = 0; i < 3; i++)
             {
                 var replicaFile = Path.Combine(replicaDir, $"file_{i}");
-                Assert.False(File.Exists(replicaFile));
+                Assert.False(File.Exists(replicaFile), $"Deletion of {replicaFile} failed");
 
                 var replicaSubDir = Path.Combine(replicaDir, $"subdir_{i}");
-                Assert.False(Directory.Exists(replicaSubDir));
+                Assert.False(Directory.Exists(replicaSubDir), $"Deletion of {replicaSubDir} failed");
             }
         }
     }
