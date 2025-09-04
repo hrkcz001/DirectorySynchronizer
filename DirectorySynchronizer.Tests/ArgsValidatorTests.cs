@@ -8,7 +8,6 @@ namespace DirectorySynchronizer.Tests
         private readonly string tempSource;
         private readonly string tempReplica;
         private readonly string tempLog;
-        private bool disposed = false;
 
         public ArgsValidatorTests()
         {
@@ -19,22 +18,9 @@ namespace DirectorySynchronizer.Tests
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    if (Directory.Exists(tempSource)) Directory.Delete(tempSource, true);
-                    if (Directory.Exists(tempReplica)) Directory.Delete(tempReplica, true);
-                    if (File.Exists(tempLog)) File.Delete(tempLog);
-                }
-                disposed = true;
-            }
+            if (Directory.Exists(tempSource)) Directory.Delete(tempSource, true);
+            if (Directory.Exists(tempReplica)) Directory.Delete(tempReplica, true);
+            if (File.Exists(tempLog)) File.Delete(tempLog);
         }
 
         [Fact]
@@ -245,8 +231,8 @@ namespace DirectorySynchronizer.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "Test runs only on Windows.");
 
-            bool result = ArgsValidator.IsFileInsideDirectory(filePath, dirPath);
-            Assert.Equal(expected, result);
+            bool result = FileSystemValidator.IsFileInsideDirectory(filePath, dirPath);
+            Assert.True(result == expected, $"Expected {expected} but got {result} for filePath: {filePath}, dirPath: {dirPath}");
         }
 
         // Unix, FreeBSD and MacOS test for IsFileInsideDirectory method
@@ -257,7 +243,7 @@ namespace DirectorySynchronizer.Tests
         [InlineData("/dir/file", "/Dir", true)]
         [InlineData("/file", "/dir", false)]
         [InlineData("/dir1", "/dir", false)]
-        public void IsFileInsideDirectory_UnixTests(string dirPath, string filePath, bool expected)
+        public void IsFileInsideDirectory_UnixTests(string filePath, string dirPath, bool expected)
         {
 
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
@@ -265,8 +251,8 @@ namespace DirectorySynchronizer.Tests
                        RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
                        "Test runs only on Unix, FreeBSD and MacOS systems.");
 
-            bool result = ArgsValidator.IsFileInsideDirectory(filePath, dirPath);
-            Assert.Equal(expected, result);
+            bool result = FileSystemValidator.IsFileInsideDirectory(filePath, dirPath);
+            Assert.True(result == expected, $"Expected {expected} but got {result} for filePath: {filePath}, dirPath: {dirPath}");
         }
     }
 }

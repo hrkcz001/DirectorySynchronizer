@@ -1,4 +1,20 @@
+One-Way Directory Synchronizer
+
 Usage: <source> <replica> <log> <interval>
 
 Interval must be a positive integer, representing time in seconds.
 Source, replica, and log paths must be independent of each other.
+
+Directories are compared periodically.
+A full comparison is performed every cycle:
+First, files with the same name are matched by modification date and size.
+Then, they are compared by hash, if date and size matches.
+
+All source directory changes are logged separately using FileSystemWatcher.
+The project is covered by both unit tests and end-to-end tests.
+
+Jenkins was used to test in multiple environments.
+Two agents were set up:
+One running on Windows,
+One running on WSL (Linux).
+This allowed testing across different file systems.

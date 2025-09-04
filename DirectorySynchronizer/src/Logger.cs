@@ -1,25 +1,11 @@
 namespace DirectorySynchronizer.src
 {
     // Logger class for logging messages to both console and a log file with thread safety.
-    public class Logger : IDisposable
+    public class Logger(TextWriter[] textWriters)
     {
-        private readonly object lockObj = new object();
-        private StreamWriter writer;
-        private bool disposed = false;
-        private string logFilePath;
+        private readonly Lock lockObj = new();
+        private readonly TextWriter[] textWriters = textWriters;
 
-        public Logger(string logFilePath)
-        {
-            try
-            {
-                writer = new StreamWriter(logFilePath, true);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error opening log file: {ex.Message}");
-            }
-            this.logFilePath = logFilePath;
-        }
 
         public void Log(string message)
         {
@@ -28,50 +14,25 @@ namespace DirectorySynchronizer.src
                 try
                 {
                     var fmessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}";
-                    Console.WriteLine(fmessage);
-                    writer.WriteLine(fmessage);
-                    writer.Flush();
+                    foreach (var writer in textWriters)
+                    {
+                        writer.WriteLine(fmessage);
+                        writer.Flush();
+                    }
                 }
                 catch (Exception ex)
                 {
-                    if (!File.Exists(logFilePath))
+                    try
                     {
-                        Console.Error.WriteLine($"Error writing to log file: {ex.Message}");
-                        Console.WriteLine("Trying to recreate log file...");
-                        try
+                        foreach (var writer in textWriters)
                         {
-                            writer?.Dispose();
-                            writer = new StreamWriter(logFilePath, true);
-                        }
-                        catch (Exception ex2)
-                        {
-                            Console.Error.WriteLine($"Error recreating log file: {ex2.Message}");
-                            throw;
+                            writer.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Logging error: {ex.Message}");
+                            writer.Flush();
                         }
                     }
-                    else
-                    {
-                        throw;
-                    }
+                    catch { }
+                    throw;
                 }
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                if (disposing)
-                {
-                    writer?.Dispose();
-                }
-                disposed = true;
             }
         }
     }

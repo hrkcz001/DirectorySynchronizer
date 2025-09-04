@@ -23,7 +23,9 @@ namespace DirectorySynchronizer.src
         }
     }
 
-    class FileSystemValidator
+    // Validates the file system paths for source, replica, and log.
+    // Ensures directories exist(creates them if not) and are accessible, and that paths do not overlap.
+    public class FileSystemValidator
     {
         public static void ValidatePaths(string sourcePath, string replicaPath, string logPath)
         {
@@ -74,6 +76,17 @@ namespace DirectorySynchronizer.src
             }
             else
             {
+
+                // Check if source directory is readable.
+                try
+                {
+                    _ = Directory.EnumerateFiles(replicaPath).FirstOrDefault();
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException($"Replica directory is not readable: {ex.Message}");
+                }
+
                 // Check if replica directory is writable.
                 try
                 {
